@@ -51,7 +51,7 @@ public class StandardMattermostService implements MattermostService {
 			JSONObject json = new JSONObject();
 
 			try {
-				json.put("channel", roomId);
+				if (!roomId.isEmpty()) json.put("channel", roomId);
 				json.put("text", message);
 				json.put("username", "jenkins");
 				json.put("icon_url", icon);
