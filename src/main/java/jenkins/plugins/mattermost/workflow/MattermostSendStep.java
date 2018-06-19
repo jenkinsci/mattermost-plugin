@@ -150,7 +150,7 @@ public class MattermostSendStep extends AbstractStepImpl {
             if (!publishSuccess && step.failOnError) {
                 throw new AbortException("Mattermost notification failed. See Jenkins logs for details.");
             } else if (!publishSuccess) {
-                listener.error("Slack notification failed. See Jenkins logs for details.");
+                listener.error("Mattermost notification failed. See Jenkins logs for details.");
             }
             return null;
         }
