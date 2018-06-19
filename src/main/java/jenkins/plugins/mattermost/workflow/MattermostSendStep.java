@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 /**
- * Workflow step to send a Slack channel notification.
+ * Workflow step to send a Mattermost channel notification.
  */
 public class MattermostSendStep extends AbstractStepImpl {
 
@@ -135,18 +135,18 @@ public class MattermostSendStep extends AbstractStepImpl {
                 listener.error(String.format("Mattermost notification failed with exception: %s", ne), ne);
                 return null;
             }
-            MattermostNotifier.DescriptorImpl slackDesc = jenkins.getDescriptorByType(MattermostNotifier.DescriptorImpl.class);
-            String team = step.endpoint != null ? step.endpoint : slackDesc.getEndpoint();
-            String channel = step.channel != null ? step.channel : slackDesc.getRoom();
-            String icon = step.icon != null ? step.icon : slackDesc.getIcon();
+            MattermostNotifier.DescriptorImpl mattermostDesc = jenkins.getDescriptorByType(MattermostNotifier.DescriptorImpl.class);
+            String team = step.endpoint != null ? step.endpoint : mattermostDesc.getEndpoint();
+            String channel = step.channel != null ? step.channel : mattermostDesc.getRoom();
+            String icon = step.icon != null ? step.icon : mattermostDesc.getIcon();
             String color = step.color != null ? step.color : "";
             String text = step.text != null ? step.text : "";
 
             //placing in console log to simplify testing of retrieving values from global config or from step field; also used for tests
             listener.getLogger().printf("Mattermost Send Pipeline step configured values from global config - connector: %s, icon: %s, channel: %s, color: %s", step.endpoint == null, step.icon == null, step.channel == null, step.color == null);
 
-            MattermostService slackService = getMattermostService(team, channel, icon);
-            boolean publishSuccess = slackService.publish(step.message, text, color);
+            MattermostService mattermostService = getMattermostService(team, channel, icon);
+            boolean publishSuccess = mattermostService.publish(step.message, text, color);
             if (!publishSuccess && step.failOnError) {
                 throw new AbortException("Mattermost notification failed. See Jenkins logs for details.");
             } else if (!publishSuccess) {
