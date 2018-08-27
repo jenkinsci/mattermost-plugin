@@ -616,12 +616,10 @@ public class MattermostNotifier extends Notifier {
 		public void onLoaded() {
 			logger.info("Starting Settings Migration Process");
 			for (AbstractProject<?, ?> p : Jenkins.getInstance().getAllItems(AbstractProject.class)) {
-				logger.info("processing Job: " + p.getName());
-
 				final MattermostJobProperty mattermostJobProperty = p.getProperty(MattermostJobProperty.class);
 
 				if (mattermostJobProperty == null) {
-					logger.info(String
+					logger.fine(String
 							.format("Configuration is already up to date for \"%s\", skipping migration",
 									p.getName()));
 					continue;
@@ -630,11 +628,11 @@ public class MattermostNotifier extends Notifier {
 				MattermostNotifier mattermostNotifier = p.getPublishersList().get(MattermostNotifier.class);
 
 				if (mattermostNotifier == null) {
-					logger.info(String
+					logger.fine(String
 							.format("Configuration does not have a notifier for \"%s\", not migrating settings",
 									p.getName()));
 				} else {
-
+					logger.info(String.format("Starting migration for \"%s\"", p.getName()));
 					//map settings
 					if (StringUtils.isBlank(mattermostNotifier.endpoint)) {
 						mattermostNotifier.endpoint = mattermostJobProperty.getEndpoint();
