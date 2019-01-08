@@ -78,8 +78,10 @@ public class MattermostNotifier extends Notifier {
 
 	public String getBuildServerUrl() {
 		if (buildServerUrl == null || buildServerUrl.equals("")) {
-			JenkinsLocationConfiguration jenkinsConfig = new JenkinsLocationConfiguration();
-			return jenkinsConfig.getUrl();
+			// Note: current code should no longer use "new JenkinsLocationConfiguration()"
+			// as only one instance per runtime is really supported by the current core.
+			JenkinsLocationConfiguration jenkinsConfig = JenkinsLocationConfiguration.get();
+			return (jenkinsConfig == null) ? null : jenkinsConfig.getUrl();
 		} else {
 			return buildServerUrl;
 		}
@@ -375,8 +377,10 @@ public class MattermostNotifier extends Notifier {
 		
 		public String getBuildServerUrl() {
 			if (buildServerUrl == null || buildServerUrl.equals("")) {
-				JenkinsLocationConfiguration jenkinsConfig = new JenkinsLocationConfiguration();
-				return jenkinsConfig.getUrl();
+				// Note: current code should no longer use "new JenkinsLocationConfiguration()"
+				// as only one instance per runtime is really supported by the current core.
+				JenkinsLocationConfiguration jenkinsConfig = JenkinsLocationConfiguration.get();
+				return (jenkinsConfig == null) ? null : jenkinsConfig.getUrl();
 			} else {
 				return buildServerUrl;
 			}
