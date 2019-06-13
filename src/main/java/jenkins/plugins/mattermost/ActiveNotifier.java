@@ -338,9 +338,9 @@ public class ActiveNotifier implements FineGrainedNotifier {
 		}
 
 		private MessageBuilder startMessage() {
-			message.append(this.escape(build.getProject().getFullDisplayName()));
+			message.append(this.escapeDisplayName(build.getProject().getFullDisplayName()));
 			message.append(" - ");
-			message.append(this.escape(build.getDisplayName()));
+			message.append(this.escapeDisplayName(build.getDisplayName()));
 			message.append(" ");
 			return this;
 		}
@@ -416,6 +416,19 @@ public class ActiveNotifier implements FineGrainedNotifier {
 			string = string.replace(">", "&gt;");
 
 			return string;
+		}
+
+		public String escapeDisplayName(String displayName) {
+			// escape HTML
+			displayName = escape(displayName);
+
+			// escape mattermost markdown which _may_ occur in job display names
+			displayName = displayName.replace("~", "\\~");
+			displayName = displayName.replace("*", "\\*");
+			displayName = displayName.replace("_", "\\_");
+			displayName = displayName.replace("`", "\\`");
+
+			return displayName;
 		}
 
 		public String toString() {
