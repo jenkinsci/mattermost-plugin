@@ -14,6 +14,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.ssl.SSLContexts;
 import org.json.JSONArray;
@@ -146,6 +147,7 @@ public class StandardMattermostService implements MattermostService
 				HttpHost httpHost = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
 				HttpClientBuilder clientBuilder = HttpClients.custom();
 				clientBuilder.setSSLContext(SSLContexts.createDefault());
+				clientBuilder.setRedirectStrategy(new LaxRedirectStrategy());
 				RequestConfig.Builder reqconfigconbuilder = RequestConfig.custom();
 				reqconfigconbuilder.setConnectTimeout(10000);
 				reqconfigconbuilder.setSocketTimeout(10000);
