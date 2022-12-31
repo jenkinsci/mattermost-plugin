@@ -371,7 +371,12 @@ public class ActiveNotifier implements FineGrainedNotifier {
       if (message.toString().contains(BACK_TO_NORMAL_STATUS_MESSAGE)) {
         durationString = createBackToNormalDurationString();
       } else {
-        durationString = build.getDurationString();
+        long duration = build.getDuration();
+        if (duration == 0L) {
+          durationString = Util.getTimeSpanString(System.currentTimeMillis() - build.getStartTimeInMillis());
+        } else {
+          durationString = Util.getTimeSpanString(build.getDuration());
+        }
       }
       message.append(durationString);
       return this;
