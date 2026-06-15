@@ -55,20 +55,14 @@ public class StandardMattermostService implements MattermostService
 	private static JSONObject createPayload(String message, String text, String color, String roomId, String userId, String icon)
 	{
 		JSONObject json = new JSONObject();
-		JSONObject field = new JSONObject();
-		field.put("short", false);
-		field.put("value", message);
-		JSONArray fields = new JSONArray();
-		fields.put(field);
 
 		JSONObject attachment = new JSONObject();
 		attachment.put("fallback", message);
 		attachment.put("color", color);
-		attachment.put("fields", fields);
+		attachment.put("text", message);
 		JSONArray mrkdwn = new JSONArray();
 		mrkdwn.put("pretext");
 		mrkdwn.put("text");
-		mrkdwn.put("fields");
 		attachment.put("mrkdwn_in", mrkdwn);
 		JSONArray attachments = new JSONArray();
 		attachments.put(attachment);
