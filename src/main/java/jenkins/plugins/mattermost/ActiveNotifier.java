@@ -6,7 +6,6 @@ import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.util.LogTaskListener;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -156,7 +155,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
     }
     MessageBuilder message = new MessageBuilder(notifier, r, this.tokenExpander);
     message.append(":pray: Started by changes from ");
-    message.append(StringUtils.join(authors, ", "));
+    message.append(hudson.Util.join(authors, ", "));
     message.append(" (");
     message.append(files.size());
     message.append(" file(s) changed)");
@@ -205,7 +204,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
     }
     MessageBuilder message = new MessageBuilder(notifier, r, this.tokenExpander);
     message.append("Changes:\n- ");
-    message.append(StringUtils.join(commits, "\n- "));
+    message.append(hudson.Util.join(commits, "\n- "));
     return message.toString();
   }
 
