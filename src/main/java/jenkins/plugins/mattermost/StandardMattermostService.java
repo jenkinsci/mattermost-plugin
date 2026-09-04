@@ -2,7 +2,6 @@ package jenkins.plugins.mattermost;
 
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -165,8 +164,8 @@ public class StandardMattermostService implements MattermostService
 							null,
 							null);
 					setupProxy(customProxy, clientBuilder, reqconfigconbuilder);
-					logger.info("MattermostNotifier using custom proxy: "+ customProxy.name + ":" + customProxy.port);
-				} else if (globalProxy != null && isProxyRequired(ProxyConfiguration.getNoProxyHostPatterns(globalProxy.noProxyHost)))
+					logger.info("MattermostNotifier using custom proxy: "+ customProxy.getName() + ":" + customProxy.getPort());
+				} else if (globalProxy != null && isProxyRequired(globalProxy.getNoProxyHostPatterns()))
 				{
 					setupProxy(globalProxy, clientBuilder, reqconfigconbuilder);
 				}
@@ -229,7 +228,7 @@ public class StandardMattermostService implements MattermostService
 
 	private RequestConfig.Builder setupProxy(ProxyConfiguration proxy, HttpClientBuilder clientBuilder, RequestConfig.Builder reqconfigconbuilder) throws MalformedURLException
 	{
-		HttpHost proxyHost = new HttpHost(proxy.name, proxy.port);
+		HttpHost proxyHost = new HttpHost(proxy.getName(), proxy.getPort());
 		DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
 		clientBuilder.setRoutePlanner(routePlanner);
 		reqconfigconbuilder.setProxy(proxyHost);
@@ -248,7 +247,7 @@ public class StandardMattermostService implements MattermostService
 			logger.info("Using proxy authentication (user=" + username + ")");
 			BasicCredentialsProvider basicCredentialsProvider = new BasicCredentialsProvider();
 			basicCredentialsProvider.setCredentials(
-					new org.apache.http.auth.AuthScope(proxyHost.getHostName(), proxy.port),
+					new org.apache.http.auth.AuthScope(proxyHost.getHostName(), proxy.getPort()),
 					new org.apache.http.auth.UsernamePasswordCredentials(username, password));
 
 			clientBuilder.setDefaultCredentialsProvider(basicCredentialsProvider);

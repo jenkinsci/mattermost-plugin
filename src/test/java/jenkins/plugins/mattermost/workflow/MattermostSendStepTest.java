@@ -1,36 +1,38 @@
 package jenkins.plugins.mattermost.workflow;
 
 import hudson.model.TaskListener;
-import hudson.util.HistoricalSecrets;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.plugins.mattermost.MattermostNotifier;
 import jenkins.plugins.mattermost.MattermostService;
 import jenkins.security.ConfidentialStore;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-/** Traditional Unit tests, allows testing null Jenkins,getInstance() */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, ConfidentialStore.class, MattermostSendStep.class, HistoricalSecrets.class})
-@PowerMockIgnore({"javax.crypto.*", "javax.net.ssl.*", "jenkins.plugins.mattermost.workflow.TestListener"
-		, "java.security.*", "org.bouncycastle"}) // https://github.com/powermock/powermock/issues/294
+/** Traditional Unit tests, allows testing null Jenkins.get() */
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class MattermostSendStepTest {
 
   @Mock TaskListener taskListenerMock;
@@ -40,20 +42,37 @@ public class MattermostSendStepTest {
   @Mock MattermostService mattermostServiceMock;
   @Mock Jenkins jenkins;
   @Mock MattermostNotifier.DescriptorImpl mattermostDescMock;
-	private MattermostSendStep.MattermostSendStepExecution stepExecution;
-	private MattermostSendStep mattermostSendStep;
+
+  private MattermostSendStep.MattermostSendStepExecution stepExecution;
+  private MattermostSendStep mattermostSendStep;
+
+  /** Static mocks are scoped, so they are opened in {@link #setUp} and closed in {@link #tearDown}. */
+  private MockedStatic<Jenkins> jenkinsStatic;
+  private MockedStatic<ConfidentialStore> confidentialStoreStatic;
 
   @Before
   public void setUp() {
-    PowerMockito.mockStatic(Jenkins.class);
-	  //when(jenkins.getDescriptorByType(MattermostNotifier.DescriptorImpl.class)) -> null ref
-	  when(jenkins.getDescriptor("mattermostNotifier")).thenReturn(mattermostDescMock);
-	  mattermostSendStep = new MattermostSendStep("message");
-	  stepExecution = spy(new MattermostSendStep.MattermostSendStepExecution(stepContextMock, mattermostSendStep));
-	  stepExecution.step = mattermostSendStep;
+    jenkinsStatic = mockStatic(Jenkins.class);
+    when(jenkins.getDescriptor("mattermostNotifier")).thenReturn(mattermostDescMock);
+    mattermostSendStep = new MattermostSendStep("message");
+    stepExecution =
+        spy(new MattermostSendStep.MattermostSendStepExecution(stepContextMock, mattermostSendStep));
+    stepExecution.step = mattermostSendStep;
 
-	  when(Jenkins.getInstance()).thenReturn(jenkins);
-	  when(Jenkins.get()).thenReturn(jenkins);
+    jenkinsStatic.when(Jenkins::get).thenReturn(jenkins);
+    jenkinsStatic.when(Jenkins::getInstanceOrNull).thenReturn(jenkins);
+
+    // Secret.fromString() needs a ConfidentialStore; give it one that yields deterministic keys.
+    confidentialStoreStatic = mockStatic(ConfidentialStore.class);
+    ConfidentialStore csMock = mock(ConfidentialStore.class);
+    confidentialStoreStatic.when(ConfidentialStore::get).thenReturn(csMock);
+    when(csMock.randomBytes(anyInt())).thenAnswer(it -> new byte[(Integer) it.getArguments()[0]]);
+  }
+
+  @After
+  public void tearDown() {
+    confidentialStoreStatic.close();
+    jenkinsStatic.close();
   }
 
   @Test
@@ -70,8 +89,9 @@ public class MattermostSendStepTest {
     when(taskListenerMock.getLogger()).thenReturn(printStreamMock);
     doNothing().when(printStreamMock).println();
 
-    when(stepExecution.getMattermostService(anyString(), anyString(), anyString()))
-        .thenReturn(mattermostServiceMock);
+    doReturn(mattermostServiceMock)
+        .when(stepExecution)
+        .getMattermostService(anyString(), anyString(), anyString());
     when(mattermostServiceMock.publish(anyString(), anyString())).thenReturn(true);
 
     stepExecution.run();
@@ -84,13 +104,6 @@ public class MattermostSendStepTest {
   public void testValuesForGlobalConfig() throws Exception {
 
     stepExecution.listener = taskListenerMock;
-	  Jenkins mock = mock(Jenkins.class);
-	  when(Jenkins.getInstanceOrNull()).thenReturn(mock);
-	  PowerMockito.mockStatic(ConfidentialStore.class);
-	  ConfidentialStore csMock = mock(ConfidentialStore.class);
-	  when(ConfidentialStore.get()).thenReturn(csMock);
-	  when(csMock.randomBytes(Matchers.anyInt()))
-			  .thenAnswer(it -> new byte[(Integer) (it.getArguments()[0])]);
 
     Secret encryptedEndpoint = Secret.fromString("globalEndpoint");
     when(mattermostDescMock.getEndpoint()).thenReturn(encryptedEndpoint);
@@ -100,8 +113,9 @@ public class MattermostSendStepTest {
     when(taskListenerMock.getLogger()).thenReturn(printStreamMock);
     doNothing().when(printStreamMock).println();
 
-    when(stepExecution.getMattermostService(anyString(), anyString(), anyString()))
-        .thenReturn(mattermostServiceMock);
+    doReturn(mattermostServiceMock)
+        .when(stepExecution)
+        .getMattermostService(anyString(), anyString(), anyString());
 
     stepExecution.run();
     verify(stepExecution, times(1))
@@ -116,54 +130,43 @@ public class MattermostSendStepTest {
 
   @Test
   public void testNonNullEmptyColor() throws Exception {
-	  Jenkins mock = mock(Jenkins.class);
-	  when(Jenkins.getInstanceOrNull()).thenReturn(mock);
-	  PowerMockito.mockStatic(ConfidentialStore.class);
-	  ConfidentialStore csMock = mock(ConfidentialStore.class);
-	  when(ConfidentialStore.get()).thenReturn(csMock);
-	  when(csMock.randomBytes(Matchers.anyInt()))
-			  .thenAnswer(it -> new byte[(Integer) (it.getArguments()[0])]);
-	  Secret encryptedEndpoint = Secret.fromString("globalEndpoint");
-	  when(mattermostDescMock.getEndpoint()).thenReturn(encryptedEndpoint);
+    Secret encryptedEndpoint = Secret.fromString("globalEndpoint");
+    when(mattermostDescMock.getEndpoint()).thenReturn(encryptedEndpoint);
     mattermostSendStep.setColor("");
-	  mattermostSendStep.setChannel("channel");
-	  mattermostSendStep.setIcon("");
+    mattermostSendStep.setChannel("channel");
+    mattermostSendStep.setIcon("");
 
     stepExecution.listener = taskListenerMock;
 
     when(taskListenerMock.getLogger()).thenReturn(printStreamMock);
     doNothing().when(printStreamMock).println();
 
-    when(stepExecution.getMattermostService(anyString(), anyString(), anyString()))
-        .thenReturn(mattermostServiceMock);
+    doReturn(mattermostServiceMock)
+        .when(stepExecution)
+        .getMattermostService(anyString(), anyString(), anyString());
 
     stepExecution.run();
     verify(mattermostServiceMock, times(1)).publish("message", "", "");
     assertNull(stepExecution.step.getColor());
   }
 
-	@Test
+  @Test
   public void testNonNullPretext() throws Exception {
-		TestListener target = new TestListener(8080);
-		Thread thread = new Thread(target);
-		thread.start();
-		PowerMockito.mockStatic(ConfidentialStore.class);
-		ConfidentialStore csMock = mock(ConfidentialStore.class);
-		when(ConfidentialStore.get()).thenReturn(csMock);
-		when(csMock.randomBytes(Matchers.anyInt()))
-				.thenAnswer(it -> new byte[(Integer) (it.getArguments()[0])]);
-		Secret encryptedEndpoint = Secret.fromString("http://localhost:8080");
-		when(mattermostDescMock.getEndpoint()).thenReturn(encryptedEndpoint);
+    TestListener target = new TestListener(8080);
+    Thread thread = new Thread(target);
+    thread.start();
+    Secret encryptedEndpoint = Secret.fromString("http://localhost:8080");
+    when(mattermostDescMock.getEndpoint()).thenReturn(encryptedEndpoint);
     mattermostSendStep.setText("@foo @bar");
-		mattermostSendStep.setChannel("channel");
+    mattermostSendStep.setChannel("channel");
     stepExecution.listener = taskListenerMock;
 
-		when(stepExecution.getMattermostService(anyString(), anyString(), anyString()))
-				.thenReturn(mattermostServiceMock);
+    doReturn(mattermostServiceMock)
+        .when(stepExecution)
+        .getMattermostService(anyString(), anyString(), anyString());
 
     when(taskListenerMock.getLogger()).thenReturn(printStreamMock);
     doNothing().when(printStreamMock).println();
-
 
     stepExecution.run();
     verify(mattermostServiceMock, times(1)).publish("message", "@foo @bar", "");
@@ -172,8 +175,7 @@ public class MattermostSendStepTest {
   @Test
   public void testNullJenkinsInstance() throws Exception {
 
-    when(Jenkins.getInstance()).thenThrow(NullPointerException.class);
-    when(Jenkins.get()).thenThrow(NullPointerException.class);
+    jenkinsStatic.when(Jenkins::getInstanceOrNull).thenReturn(null);
 
     stepExecution.listener = taskListenerMock;
 
@@ -181,6 +183,6 @@ public class MattermostSendStepTest {
     doNothing().when(printStreamMock).println();
 
     stepExecution.run();
-    verify(taskListenerMock, times(1)).error(anyString(), any(Exception.class));
+    verify(taskListenerMock, times(1)).error(anyString());
   }
 }

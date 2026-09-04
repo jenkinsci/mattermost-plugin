@@ -3,7 +3,8 @@ package jenkins.plugins.mattermost.workflow;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import org.eclipse.jetty.util.BlockingArrayQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 public class TestListener implements Runnable
 {
 	public final int port;
-	public BlockingArrayQueue<String> messages = new BlockingArrayQueue<>();
+	public BlockingQueue<String> messages = new LinkedBlockingQueue<>();
 	private String path = "/";
 
 	public TestListener(int port)

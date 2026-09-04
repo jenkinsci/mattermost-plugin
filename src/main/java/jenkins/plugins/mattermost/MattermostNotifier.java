@@ -17,7 +17,6 @@ import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -26,7 +25,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -373,16 +372,16 @@ public class MattermostNotifier extends Notifier {
 
   public MattermostService newMattermostService(AbstractBuild r, BuildListener listener) {
 	  String endpoint = this.getEndpoint().getPlainText();
-    if (StringUtils.isEmpty(endpoint)) {
+    if (endpoint == null || endpoint.isEmpty()) {
 		endpoint = getDescriptor().getEndpoint().getPlainText();
     }
     String room = this.room;
-    if (StringUtils.isEmpty(room)) {
+    if (room == null || room.isEmpty()) {
       room = getDescriptor().getRoom();
     }
 
     String icon = this.icon;
-    if (StringUtils.isEmpty(icon)) {
+    if (icon == null || icon.isEmpty()) {
       icon = getDescriptor().getIcon();
     }
 
@@ -587,19 +586,19 @@ public class MattermostNotifier extends Notifier {
       }
       try {
         String targetEndpoint = endpoint;
-        if (StringUtils.isEmpty(targetEndpoint)) {
+        if (targetEndpoint == null || targetEndpoint.isEmpty()) {
 			targetEndpoint = this.getEndpoint().getPlainText();
         }
         String targetRoom = room;
-        if (StringUtils.isEmpty(targetRoom)) {
+        if (targetRoom == null || targetRoom.isEmpty()) {
           targetRoom = this.room;
         }
         String targetIcon = icon;
-        if (StringUtils.isEmpty(targetIcon)) {
+        if (targetIcon == null || targetIcon.isEmpty()) {
           targetIcon = this.icon;
         }
         String targetBuildServerUrl = buildServerUrl;
-        if (StringUtils.isEmpty(targetBuildServerUrl)) {
+        if (targetBuildServerUrl == null || targetBuildServerUrl.isEmpty()) {
           targetBuildServerUrl = this.buildServerUrl;
         }
         MattermostService testMattermostService =
@@ -804,14 +803,15 @@ public class MattermostNotifier extends Notifier {
         } else {
           logger.info(String.format("Starting migration for \"%s\"", p.getName()));
           // map settings
-			if (StringUtils.isBlank(mattermostNotifier.getEndpoint().getPlainText()))
+			if (mattermostNotifier.getEndpoint().getPlainText() == null
+					|| mattermostNotifier.getEndpoint().getPlainText().trim().isEmpty())
 			{
             mattermostNotifier.setEndpoint(mattermostJobProperty.getEndpoint());
           }
-          if (StringUtils.isBlank(mattermostNotifier.icon)) {
+          if (mattermostNotifier.icon == null || mattermostNotifier.icon.trim().isEmpty()) {
             mattermostNotifier.icon = mattermostJobProperty.getIcon();
           }
-          if (StringUtils.isBlank(mattermostNotifier.room)) {
+          if (mattermostNotifier.room == null || mattermostNotifier.room.trim().isEmpty()) {
             mattermostNotifier.room = mattermostJobProperty.getRoom();
           }
 

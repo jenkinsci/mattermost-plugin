@@ -6,7 +6,6 @@ import hudson.model.queue.QueueTaskFuture;
 import javaposse.jobdsl.dsl.DslScriptLoader;
 import javaposse.jobdsl.dsl.GeneratedJob;
 import javaposse.jobdsl.plugin.JenkinsJobManagement;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -105,10 +104,10 @@ public class MattermostSendStepIntegrationTest {
 				new CpsFlowDefinition(
 						"mattermostSend(message: 'test please ignore', endpoint: 'https://localhost:9999/', icon: 'icon', channel: '#jenkins', color: 'good');",
 						true));
-		TimeStamp start = TimeStamp.getCurrentTime();
+		long startNanos = System.nanoTime();
 		WorkflowRun run = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
-		TimeStamp stop = TimeStamp.getCurrentTime();
-		Assert.assertTrue(stop.getSeconds() - start.getSeconds() < 30);
+		long stopNanos = System.nanoTime();
+		Assert.assertTrue(stopNanos - startNanos < TimeUnit.SECONDS.toNanos(30));
 	}
 
 	@Test
