@@ -1,7 +1,6 @@
 package jenkins.plugins.mattermost;
 
 import jenkins.plugins.mattermost.workflow.TestListener;
-import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,74 +47,38 @@ public class StandardMattermostServiceTest {
     service.publish("message");
   }
 
-	@Deprecated
-  public void publishToASingleRoomSendsASingleMessage() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://localhost:" + port, "#room1", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    service.setHttpClient(httpClientStub);
-    service.publish("message");
-    assertEquals(1, service.getHttpClient().getNumberOfCallsToExecuteMethod());
-  }
-
-	@Deprecated
-  public void publishToMultipleRoomsSendsAMessageToEveryRoom() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://localhost:" + port, "#room1,#room2,#room3", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    service.setHttpClient(httpClientStub);
-    service.publish("message");
-    assertEquals(3, service.getHttpClient().getNumberOfCallsToExecuteMethod());
-  }
-
   @Test
   public void successfulPublishToASingleRoomReturnsTrue() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://localhost:" + port, "#room1", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    httpClientStub.setHttpStatus(HttpStatus.SC_OK);
-    service.setHttpClient(httpClientStub);
+    StandardMattermostService service =
+			new StandardMattermostService("http://localhost:" + port, "#room1", "");
     assertTrue(service.publish("message"));
   }
 
   @Test
   public void successfulPublishToMultipleRoomsReturnsTrue() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://localhost:" + port, "#room1,#room2,#room3", "");
+    StandardMattermostService service =
+			new StandardMattermostService("http://localhost:" + port, "#room1,#room2,#room3", "");
 
-    HttpClientStub httpClientStub = new HttpClientStub();
-    httpClientStub.setHttpStatus(HttpStatus.SC_OK);
-    service.setHttpClient(httpClientStub);
     assertTrue(service.publish("message"));
   }
 
   @Test
   public void failedPublishToASingleRoomReturnsFalse() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://endpoint", "#room1", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    httpClientStub.setHttpStatus(HttpStatus.SC_NOT_FOUND);
-    service.setHttpClient(httpClientStub);
+    StandardMattermostService service =
+			new StandardMattermostService("http://endpoint", "#room1", "");
     assertFalse(service.publish("message"));
   }
 
   @Test
   public void singleFailedPublishToMultipleRoomsReturnsFalse() {
-    StandardMattermostServiceStub service =
-			new StandardMattermostServiceStub("http://endpoint", "#room1,#room2,#room3", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    httpClientStub.setFailAlternateResponses(true);
-    httpClientStub.setHttpStatus(HttpStatus.SC_OK);
-    service.setHttpClient(httpClientStub);
+    StandardMattermostService service =
+			new StandardMattermostService("http://endpoint", "#room1,#room2,#room3", "");
     assertFalse(service.publish("message"));
   }
 
   @Test
   public void publishToEmptyRoomReturnsTrue() {
-	  StandardMattermostServiceStub service = new StandardMattermostServiceStub("http://localhost:" + port, "", "");
-    HttpClientStub httpClientStub = new HttpClientStub();
-    httpClientStub.setHttpStatus(HttpStatus.SC_OK);
-    service.setHttpClient(httpClientStub);
+	  StandardMattermostService service = new StandardMattermostService("http://localhost:" + port, "", "");
     assertTrue(service.publish("message"));
   }
 

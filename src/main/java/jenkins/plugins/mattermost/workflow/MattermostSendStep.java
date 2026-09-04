@@ -15,7 +15,7 @@ import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.Set;
 
@@ -23,7 +23,7 @@ import java.util.Set;
 public class MattermostSendStep extends Step
 {
 
-  private final @Nonnull String message;
+  private final @NonNull String message;
   private String text;
   private String color;
   private String channel;
@@ -31,7 +31,7 @@ public class MattermostSendStep extends Step
   private String icon;
   private boolean failOnError;
 
-  @Nonnull
+  @NonNull
   public String getMessage() {
     return message;
   }
@@ -91,7 +91,7 @@ public class MattermostSendStep extends Step
   }
 
   @DataBoundConstructor
-  public MattermostSendStep(@Nonnull String message) {
+  public MattermostSendStep(@NonNull String message) {
     this.message = message;
   }
 
@@ -157,14 +157,11 @@ public class MattermostSendStep extends Step
 
 		  // default to global config values if not set in step, but allow step to
 		  // override all global settings
-		  Jenkins jenkins;
-		  // Jenkins.getInstance() may return null, no message sent in that case
-		  try
+		  // Jenkins may be unavailable (for instance during shutdown); no message is sent in that case
+		  Jenkins jenkins = Jenkins.getInstanceOrNull();
+		  if (jenkins == null)
 		  {
-			  jenkins = Jenkins.get();
-		  } catch (NullPointerException ne)
-		  {
-			  listener.error(String.format("Mattermost notification failed with exception: %s", ne), ne);
+			  listener.error("Mattermost notification failed: no Jenkins instance is available");
 			  return null;
 		  }//TODO REFACTOR jenkins.getdescriptor by class
 		  MattermostNotifier.DescriptorImpl mattermostDesc =
