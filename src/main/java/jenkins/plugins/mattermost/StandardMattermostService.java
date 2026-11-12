@@ -165,7 +165,7 @@ public class StandardMattermostService implements MattermostService
 							null);
 					setupProxy(customProxy, clientBuilder, reqconfigconbuilder);
 					logger.info("MattermostNotifier using custom proxy: "+ customProxy.name + ":" + customProxy.port);
-				} else if (globalProxy != null && isProxyRequired(ProxyConfiguration.getNoProxyHostPatterns(globalProxy.noProxyHost)))
+				} else if (globalProxy != null && isProxyRequired(globalProxy.getNoProxyHostPatterns()))
 				{
 					setupProxy(globalProxy, clientBuilder, reqconfigconbuilder);
 				}

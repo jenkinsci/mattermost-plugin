@@ -1,6 +1,7 @@
 package jenkins.plugins.mattermost.workflow;
 
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.AbortException;
 import hudson.Extension;
@@ -15,7 +16,6 @@ import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Set;
 
@@ -23,7 +23,7 @@ import java.util.Set;
 public class MattermostSendStep extends Step
 {
 
-  private final @Nonnull String message;
+  private final @NonNull String message;
   private String text;
   private String color;
   private String channel;
@@ -31,7 +31,7 @@ public class MattermostSendStep extends Step
   private String icon;
   private boolean failOnError;
 
-  @Nonnull
+  @NonNull
   public String getMessage() {
     return message;
   }
@@ -91,7 +91,7 @@ public class MattermostSendStep extends Step
   }
 
   @DataBoundConstructor
-  public MattermostSendStep(@Nonnull String message) {
+  public MattermostSendStep(@NonNull String message) {
     this.message = message;
   }
 
@@ -158,11 +158,11 @@ public class MattermostSendStep extends Step
 		  // default to global config values if not set in step, but allow step to
 		  // override all global settings
 		  Jenkins jenkins;
-		  // Jenkins.getInstance() may return null, no message sent in that case
+		  // Jenkins.get() throws when no instance is available.
 		  try
 		  {
 			  jenkins = Jenkins.get();
-		  } catch (NullPointerException ne)
+		  } catch (IllegalStateException ne)
 		  {
 			  listener.error(String.format("Mattermost notification failed with exception: %s", ne), ne);
 			  return null;

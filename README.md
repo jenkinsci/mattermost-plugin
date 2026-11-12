@@ -19,6 +19,8 @@ mattermostSend color: 'good', message: 'Message from Jenkins Pipeline', text: 'o
 
 # Jenkins Instructions
 
+Requires Jenkins 2.555.3 or newer running on Java 25.
+
 1. The first step is to set up a Mattermost server
 2. Then Configure an incoming webhook
 3. Install this plugin on your Jenkins server
@@ -26,15 +28,50 @@ mattermostSend color: 'good', message: 'Message from Jenkins Pipeline', text: 'o
 
 # Developer instructions
 
-Make sure you have Maven and JDK installed.
+## Nix environment
+
+Use a recent Nixpkgs channel that provides `jdk25`. Enter the development shell:
+
+```sh
+nix-shell
+```
+
+The shell provides the full JDK 25, Maven, Git, and fonts for the browser-based
+Jenkins tests. It sets `JAVA_HOME` automatically.
+
+To run the tests and package the plugin without entering an interactive shell:
+
+```sh
+nix-shell --run 'mvn clean package'
+```
+
+With [direnv](https://direnv.net/) installed and hooked into your shell, run
+`direnv allow` once in this directory. The `.envrc` file then loads `shell.nix`
+automatically when you enter the project.
+
+## Manual environment
+
+Make sure you have Maven 3.9.6 or newer and a full JDK 25 installed, including
+font support for the browser-based Jenkins tests.
+Set `JAVA_HOME` to your JDK 25 installation before running Maven:
+
+```sh
+export JAVA_HOME=/path/to/jdk25
+```
+
+## Development commands
+
+Start a local Jenkins instance with the plugin:
+
+    mvn hpi:run
 
 Run unit tests
 
     mvn test
 
-Run findbugs:
+Run SpotBugs:
 
-    mvn findbugs:check
+    mvn spotbugs:check
 
 Create an HPI file to install in Jenkins (HPI file will be in `target/mattermost.hpi`).
 

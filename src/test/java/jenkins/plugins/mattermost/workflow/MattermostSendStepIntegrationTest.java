@@ -6,7 +6,6 @@ import hudson.model.queue.QueueTaskFuture;
 import javaposse.jobdsl.dsl.DslScriptLoader;
 import javaposse.jobdsl.dsl.GeneratedJob;
 import javaposse.jobdsl.plugin.JenkinsJobManagement;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -84,17 +83,17 @@ public class MattermostSendStepIntegrationTest {
 	public void testHttpPost() throws Exception
 	{
 		WorkflowJob job = jenkinsRule.jenkins.createProject(WorkflowJob.class, "workflow");
-		TestListener target = TestListener.create("/hooks/obvious-random-token");
-		job.setDefinition(
-				new CpsFlowDefinition(
-						"mattermostSend(message: 'test please ignore', endpoint: 'http://localhost:" + target.port + "/hooks/obvious-random-token', icon: 'icon', channel: '#jenkins', color: 'good');",
-						true));
+		try (TestListener target = TestListener.create("/hooks/obvious-random-token")) {
+			job.setDefinition(
+					new CpsFlowDefinition(
+							"mattermostSend(message: 'test please ignore', endpoint: 'http://localhost:" + target.port + "/hooks/obvious-random-token', icon: 'icon', channel: '#jenkins', color: 'good');",
+							true));
 
-		Thread thread = new Thread(target);
-		thread.start();
-		WorkflowRun run = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
-		String poll = target.messages.poll(10, TimeUnit.SECONDS);
-		Assert.assertTrue(poll.contains("test"));
+			WorkflowRun run = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
+			String poll = target.messages.poll(10, TimeUnit.SECONDS);
+			Assert.assertNotNull(poll);
+			Assert.assertTrue(poll.contains("test"));
+		}
 	}
 
 	@Test
@@ -105,46 +104,44 @@ public class MattermostSendStepIntegrationTest {
 				new CpsFlowDefinition(
 						"mattermostSend(message: 'test please ignore', endpoint: 'https://localhost:9999/', icon: 'icon', channel: '#jenkins', color: 'good');",
 						true));
-		TimeStamp start = TimeStamp.getCurrentTime();
+		long start = System.nanoTime();
 		WorkflowRun run = jenkinsRule.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
-		TimeStamp stop = TimeStamp.getCurrentTime();
-		Assert.assertTrue(stop.getSeconds() - start.getSeconds() < 30);
+		Assert.assertTrue(System.nanoTime() - start < TimeUnit.SECONDS.toNanos(30));
 	}
 
 	@Test
 	public void testDSLJob() throws Exception
 	{
-		TestListener testListener = TestListener.create("/");
-		Thread thread = new Thread(testListener);
-		thread.start();
-		JenkinsJobManagement jobManagement = new JenkinsJobManagement(System.out, Collections.emptyMap(), new File("."));
-		DslScriptLoader dslScriptLoader = new DslScriptLoader(jobManagement);
-		Set<GeneratedJob> jobs = dslScriptLoader.runScript("job('my-mattermost-job') {\n" +
-				"    description(\"Testing the new Mattermost plugin\")\n" +
-				"\n" +
-				"    publishers {\n" +
-				"        mattermostNotifier {\n" +
-				"            endpoint('http://localhost:" + testListener.port + "')\n" +
-				"            buildServerUrl('https://jenkins.mycompany.com/')\n" +
-				"            room('#mattermost')\n" +
-				"            startNotification(true)\n" +
-				"            notifyAborted(true)\n" +
-				"            notifyFailure(true)\n" +
-				"            notifyNotBuilt(true)\n" +
-				"            notifySuccess(true)\n" +
-				"            notifyUnstable(true)\n" +
-				"            notifyBackToNormal(true)\n" +
-				"            notifyRepeatedFailure(true)\n" +
-				"            includeTestSummary(true)\n" +
-				"            includeCustomMessage(true)\n" +
-				"        }\n" +
-				"    }\n" +
-				"}").getJobs();
+		try (TestListener testListener = TestListener.create("/")) {
+			JenkinsJobManagement jobManagement = new JenkinsJobManagement(System.out, Collections.emptyMap(), new File("."));
+			DslScriptLoader dslScriptLoader = new DslScriptLoader(jobManagement);
+			Set<GeneratedJob> jobs = dslScriptLoader.runScript("job('my-mattermost-job') {\n" +
+					"    description(\"Testing the new Mattermost plugin\")\n" +
+					"\n" +
+					"    publishers {\n" +
+					"        mattermostNotifier {\n" +
+					"            endpoint('http://localhost:" + testListener.port + "')\n" +
+					"            buildServerUrl('https://jenkins.mycompany.com/')\n" +
+					"            room('#mattermost')\n" +
+					"            startNotification(true)\n" +
+					"            notifyAborted(true)\n" +
+					"            notifyFailure(true)\n" +
+					"            notifyNotBuilt(true)\n" +
+					"            notifySuccess(true)\n" +
+					"            notifyUnstable(true)\n" +
+					"            notifyBackToNormal(true)\n" +
+					"            notifyRepeatedFailure(true)\n" +
+					"            includeTestSummary(true)\n" +
+					"            includeCustomMessage(true)\n" +
+					"        }\n" +
+					"    }\n" +
+					"}").getJobs();
 
-//		TopLevelItem item = jenkinsRule.jenkins.getItem("my-mattermost-job");
-		jenkinsRule.jenkins.getProjects().get(0).scheduleBuild2(0).get();
-		String poll = testListener.messages.poll(10, TimeUnit.SECONDS);
-		Assert.assertTrue(poll != null);
+//			TopLevelItem item = jenkinsRule.jenkins.getItem("my-mattermost-job");
+			jenkinsRule.jenkins.getProjects().get(0).scheduleBuild2(0).get();
+			String poll = testListener.messages.poll(10, TimeUnit.SECONDS);
+			Assert.assertTrue(poll != null);
+		}
 	}
 
 }
