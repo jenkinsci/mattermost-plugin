@@ -569,7 +569,7 @@ public class MattermostNotifier extends Notifier {
 
     @Override
     public String getDisplayName() {
-      return "Mattermost Notifications";
+      return Messages.MattermostNotifier_DisplayName();
     }
 
 

@@ -21,6 +21,7 @@
     <jenkins.version>2.555.3</jenkins.version>
     <!-- HPI validation ties this property to the Jenkins core baseline. -->
     <maven.compiler.release>21</maven.compiler.release>
+    <hpi.bundledArtifacts>json</hpi.bundledArtifacts>
   </properties>
 
   <licenses>
@@ -51,6 +52,12 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.2</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
@@ -168,6 +175,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
+          <!-- Jenkins' JNA and XStream dependencies still need these APIs on Java 25. -->
+          <argLine>${argLine} --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow</argLine>
         </configuration>
       </plugin>
     </plugins>
