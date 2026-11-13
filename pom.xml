@@ -10,7 +10,7 @@
 
   <artifactId>mattermost</artifactId>
   <packaging>hpi</packaging>
-  <version>3.2.1</version>
+  <version>3.2.2-SNAPSHOT</version>
   <name>Mattermost Notification Plugin</name>
   <description>A Build status publisher that notifies channels on a Mattermost server</description>
   <url>https://github.com/jenkinsci/mattermost-plugin</url>
