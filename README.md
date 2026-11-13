@@ -19,7 +19,7 @@ mattermostSend color: 'good', message: 'Message from Jenkins Pipeline', text: 'o
 
 # Jenkins Instructions
 
-Requires Jenkins 2.555.3 or newer running on Java 25.
+Requires Jenkins 2.555.3 or newer running on Java 21 or newer.
 
 1. The first step is to set up a Mattermost server
 2. Then Configure an incoming webhook
@@ -30,13 +30,13 @@ Requires Jenkins 2.555.3 or newer running on Java 25.
 
 ## Nix environment
 
-Use a recent Nixpkgs channel that provides `jdk25`. Enter the development shell:
+Use a recent Nixpkgs channel that provides `jdk21`. Enter the development shell:
 
 ```sh
 nix-shell
 ```
 
-The shell provides the full JDK 25, Maven, Git, and fonts for the browser-based
+The shell provides the full JDK 21, Maven, Git, and fonts for the browser-based
 Jenkins tests. It sets `JAVA_HOME` automatically.
 
 To run the tests and package the plugin without entering an interactive shell:
@@ -51,12 +51,12 @@ automatically when you enter the project.
 
 ## Manual environment
 
-Make sure you have Maven 3.9.6 or newer and a full JDK 25 installed, including
+Make sure you have Maven 3.9.6 or newer and a full JDK 21 installed, including
 font support for the browser-based Jenkins tests.
-Set `JAVA_HOME` to your JDK 25 installation before running Maven:
+Set `JAVA_HOME` to your JDK 21 installation before running Maven:
 
 ```sh
-export JAVA_HOME=/path/to/jdk25
+export JAVA_HOME=/path/to/jdk21
 ```
 
 ## Development commands

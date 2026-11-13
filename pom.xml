@@ -135,21 +135,13 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>[25,)</version>
+                  <version>[21,)</version>
                   <level>ERROR</level>
                 </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <!-- HPI validation resets the release property to the Jenkins core baseline (21). -->
-          <release>25</release>
-          <testRelease>25</testRelease>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
@@ -163,11 +155,6 @@
         <extensions>true</extensions>
         <configuration>
           <compatibleSinceVersion>2.4.0</compatibleSinceVersion>
-          <archive>
-            <manifestEntries>
-              <Java-Version>25</Java-Version>
-            </manifestEntries>
-          </archive>
         </configuration>
       </plugin>
       <plugin>
@@ -175,8 +162,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
-          <!-- Jenkins' JNA and XStream dependencies still need these APIs on Java 25. -->
-          <argLine>${argLine} --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow</argLine>
         </configuration>
       </plugin>
     </plugins>
